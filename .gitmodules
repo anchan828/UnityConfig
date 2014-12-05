@@ -1,3 +1,7 @@
 [submodule "GameViewSizeHelper"]
 	path = GameViewSizeHelper
 	url = git@github.com:anchan828/unity-GameViewSizeHelper.git
+[submodule "ReorderableList"]
+	path = ReorderableList
+	url = git@github.com:anchan828/unity-ReorderableList.git
+	branch = submodule
