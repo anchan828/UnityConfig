@@ -27,6 +27,7 @@ namespace Kyusyukeigo.Helper
     {
         public GameSizeGroup[] gameViewSizes = new GameSizeGroup[0];
        
+        public Object[] layouts = new Object[0];
 
         [MenuItem("Assets/Create/UnityConfig/New Config")]
         static void CreateConfig()

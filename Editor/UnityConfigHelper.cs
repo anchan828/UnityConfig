@@ -3,7 +3,7 @@ using UnityEditor;
 using System.IO;
 using System.Linq;
 using System;
-
+using UnityEditorInternal;
 namespace Kyusyukeigo.Helper
 {
     [InitializeOnLoad]
@@ -42,6 +42,14 @@ namespace Kyusyukeigo.Helper
                 var currentFilePath = new System.Diagnostics.StackTrace(true).GetFrame(0).GetFileName();
 
                 return Path.GetDirectoryName(currentFilePath);
+            }
+        }
+
+        internal static string layoutFolderPath
+        {
+            get
+            {
+                return InternalEditorUtility.unityPreferencesFolder + "/Layouts";
             }
         }
 

@@ -1,4 +1,5 @@
-﻿using UnityEditor;
+﻿using System.IO;
+using UnityEditor;
 using UnityEngine;
 using System.Linq;
 using System.Text;
@@ -24,27 +25,47 @@ namespace Kyusyukeigo.Helper
 
         public override void OnInspectorGUI()
         {
-
+            serializedObject.Update();
+            DrawLayoutsGUI();
 
             DrawGameViewSizeGroupGUI();
 
             if (GUILayout.Button("Load Config", "LargeButton"))
             {
                 message = new StringBuilder();
+                LoadLayouts();
                 LoadGameViewSizes();
             }
 
             EditorGUILayout.TextArea(message.ToString());
+
+            serializedObject.ApplyModifiedProperties();
         }
 
+        void LoadLayouts()
+        {
+            foreach (var layout in config.layouts)
+            {
+                if (layout == null)
+                    continue;
+                message.Append("[Layout] Loading " + layout.name + " ");
+                var sourceLayoutPath = AssetDatabase.GetAssetPath(layout);
+                var destLayoutPath = Path.Combine(UnityConfigHelper.layoutFolderPath, Path.GetFileName(AssetDatabase.GetAssetPath(layout)));
+                File.Copy(sourceLayoutPath, destLayoutPath, true);
+                message.AppendLine("loaded.");
 
+                
+            }
+
+            InternalEditorUtility.ReloadWindowLayoutMenu();
+        }
         void LoadGameViewSizes()
         {
             foreach (var gameViewSizeGroup in config.gameViewSizes)
             {
                 foreach (var gameViewSize in gameViewSizeGroup.gameViewSizes)
                 {
-                    message.Append("Loading [GameViewSize] " + gameViewSize.name + " ");
+                    message.Append("[GameViewSize] Loading " + gameViewSize.name + " ");
                     var result = UnityConfigHelper.LoadGameViewSize(gameViewSizeGroup.type, gameViewSize);
 
                     message.AppendLine((result ? "" : "already") + " loaded.");
@@ -52,21 +73,54 @@ namespace Kyusyukeigo.Helper
                 }
             }
         }
+
+        ReorderableList layoutsList = null;
+
+        void DrawLayoutsGUI()
+        {
+            EditorGUILayout.LabelField("Layouts", UnityConfigHelper.Style.header, GUILayout.Height(32));  
+            
+            if (layoutsList == null)
+            {
+                layoutsList = new ReorderableList(serializedObject, serializedObject.FindProperty("layouts"));
+                layoutsList.drawHeaderCallback += (position) => EditorGUI.LabelField(position, "Layout Assets");
+                
+                layoutsList.drawElementCallback += ( rect, index, isActive, isFocused) =>
+                {
+                    var prop = layoutsList.serializedProperty.GetArrayElementAtIndex(index);
+
+                    EditorGUI.BeginChangeCheck();
+
+                    prop.objectReferenceValue = EditorGUI.ObjectField(rect, prop.objectReferenceValue, typeof(Object));
+
+                    if (EditorGUI.EndChangeCheck())
+                    {
+                        if (Path.GetExtension(AssetDatabase.GetAssetPath(prop.objectReferenceValue)) != ".wlt")
+                            prop.objectReferenceValue = null;
+                    }
+
+                    // EditorGUI.PropertyField(rect, layoutsList.serializedProperty.GetArrayElementAtIndex(index));
+                };
+
+            }
+            layoutsList.DoLayoutList();
+
+
+        }
+
         int selectedPlatform = 0;
        
         void DrawGameViewSizeGroupGUI()
         {
-            EditorGUILayout.LabelField("GameView Size", UnityConfigHelper.Style.header,GUILayout.Height(32));
+            EditorGUILayout.LabelField("GameView Size", UnityConfigHelper.Style.header, GUILayout.Height(32));
            
-            EditorGUILayout.BeginHorizontal();
 
             var displayNames = config.gameViewSizes.Select(v => v.type.ToString()).ToArray();
             selectedPlatform = GUILayout.SelectionGrid((int)selectedPlatform, displayNames, displayNames.Count(), EditorStyles.toolbarButton);
 
-            EditorGUILayout.EndHorizontal();
             EditorGUILayout.Space();
 
-            serializedObject.Update();
+           
             var gameViewSizes = serializedObject.FindProperty("gameViewSizes");
 
             for (int i = 0; i < gameViewSizes.arraySize; i++)
@@ -111,7 +165,7 @@ namespace Kyusyukeigo.Helper
             }
 
 
-            serializedObject.ApplyModifiedProperties();
+           
         }
 
         void DrawGameViewSizeGUI(int index, params GameViewSize[] gameViewSizes)
