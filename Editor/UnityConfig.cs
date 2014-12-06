@@ -27,12 +27,12 @@ namespace Kyusyukeigo.Helper
     {
         #region General
 
-        public bool kAutoRefresh = true;
+        public bool kAutoRefresh;
         public bool alwaysShowProjectWizard;
-        public bool kCompressTexturesOnImport = true;
+        public bool kCompressTexturesOnImport;
         public bool useOSColorPicker;
-        public bool enableEditorAnalytics = true;
-        public bool showAssetStoreSearchHits = true;
+        public bool enableEditorAnalytics;
+        public bool showAssetStoreSearchHits;
         public bool verifySavingAssets;
         public bool allowAlphaNumericHierarchy;
 
@@ -41,7 +41,7 @@ namespace Kyusyukeigo.Helper
         #region External Tools
 
         public string kScriptsDefaultApp;
-        public bool allowAttachedDebuggingOfEditor = true;
+        public bool allowAttachedDebuggingOfEditor;
         public string kScriptEditorArgs;
         public string kImagesDefaultApp;
         public string kDiffsDefaultApp;
@@ -52,7 +52,7 @@ namespace Kyusyukeigo.Helper
         #region Cache Server
 
         public bool useCacheServer;
-        public string IPAddress;
+        public string cacheServerIPAddress;
 
         #endregion
 
@@ -60,34 +60,49 @@ namespace Kyusyukeigo.Helper
 
     public class UnityConfig : ScriptableObject
     {
-        public GameSizeGroup[] gameViewSizes = new GameSizeGroup[0];
+        public GameSizeGroup[] gameViewSizes = {
+         new GameSizeGroup  { type = GameViewSizeGroupType.WebPlayer },
+         new GameSizeGroup  { type = GameViewSizeGroupType.Standalone },
+         new GameSizeGroup  { type = GameViewSizeGroupType.Android },
+         new GameSizeGroup  { type = GameViewSizeGroupType.iOS },
+         new GameSizeGroup  { type = GameViewSizeGroupType.WebPlayer },
+        };
 
         public Object[] layouts = new Object[0];
 
-        public Preferences preferences = new Preferences();
+        public Preferences preferences = new Preferences
+        {
+            // General
+
+            kAutoRefresh = true,
+            alwaysShowProjectWizard = false,
+            kCompressTexturesOnImport = true,
+            useOSColorPicker = false,
+            enableEditorAnalytics = true,
+            showAssetStoreSearchHits = true,
+            verifySavingAssets = false,
+            allowAlphaNumericHierarchy = false,
+
+            // External Tools
+
+            kScriptsDefaultApp = "",
+            allowAttachedDebuggingOfEditor = true,
+            kScriptEditorArgs = "",
+            kImagesDefaultApp = "",
+            kDiffsDefaultApp = "",
+            androidSdkRoot = "",
+
+            // Cache Server
+
+            useCacheServer = false,
+            cacheServerIPAddress = ""
+        };
 
         [MenuItem("Assets/Create/UnityConfig/New Config")]
         static void CreateConfig()
         {
             var config = CreateInstance<UnityConfig>();
-
-            config.Reset();
-            Directory.CreateDirectory(UnityConfigHelper.configFolderPath);
-            Debug.Log(UnityConfigHelper.configFolderPath);
-            ProjectWindowUtil.CreateAsset(config, Path.Combine(UnityConfigHelper.configFolderPath, "New UnityConfig.asset"));
-        }
-
-        void Reset()
-        {
-            gameViewSizes = new GameSizeGroup[0];
-
-            foreach (var gameViewSizeType in new[] { GameViewSizeGroupType.WebPlayer, GameViewSizeGroupType.Standalone, GameViewSizeGroupType.Android, GameViewSizeGroupType.iOS })
-            {
-                ArrayUtility.Add(ref gameViewSizes, new GameSizeGroup
-                    {
-                        type = gameViewSizeType
-                    });
-            }
+            ProjectWindowUtil.CreateAsset(config, "New UnityConfig.asset");
         }
     }
 }

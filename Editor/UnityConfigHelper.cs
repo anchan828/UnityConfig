@@ -1,45 +1,11 @@
 ﻿using UnityEngine;
 using UnityEditor;
-using System.IO;
-using System.Linq;
-using System;
 using UnityEditorInternal;
 namespace Kyusyukeigo.Helper
 {
     [InitializeOnLoad]
     internal class UnityConfigHelper
     {
-        internal static GameViewSizeGroupType[] gameViewSizeTypes
-        {
-            get
-            {
-                return Enum.GetValues(typeof(GameViewSizeGroupType)).Cast<GameViewSizeGroupType>().ToArray();
-            }
-        }
-
-        internal static string[] GetConfigNames()
-        {
-            return Directory.GetFiles(configFolderPath, "*.json").Select(path => Path.GetFileNameWithoutExtension(path)).ToArray();
-        }
-
-        internal static string configFolderPath
-        {
-            get
-            {
-                return Path.Combine(currentFolderPath, "conf");
-            }
-        }
-
-        private static string currentFolderPath
-        {
-            get
-            {
-                var csPath = AssetDatabase.GetAllAssetPaths()
-                        .FirstOrDefault(path => Path.GetFileName(path) == typeof(UnityConfigHelper).Name + ".cs");
-                return Path.GetDirectoryName(csPath);
-            }
-        }
-
         internal static string layoutFolderPath
         {
             get
@@ -52,17 +18,17 @@ namespace Kyusyukeigo.Helper
         {
             if (GameViewSizeHelper.Contains(groupType, gameViewSize.sizeType, gameViewSize.width, gameViewSize.height, gameViewSize.name))
                 return false;
-            else
-            {
-                GameViewSizeHelper.AddCustomSize(groupType, gameViewSize.sizeType, gameViewSize.width, gameViewSize.height, gameViewSize.name);
-                return true;
-            }
+            
+            GameViewSizeHelper.AddCustomSize(groupType, gameViewSize.sizeType, gameViewSize.width, gameViewSize.height, gameViewSize.name);
+            
+            return true;
         }
 
         internal class Style
         {
             public static GUIStyle header = new GUIStyle(EditorStyles.largeLabel);
-
+            public static GUIStyle lgHeader = new GUIStyle("RL Header");
+            public static GUIStyle lgBackground = new GUIStyle("RL Background");
             static Style()
             {
                 header.fontStyle = FontStyle.Bold;

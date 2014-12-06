@@ -45,7 +45,7 @@ namespace Kyusyukeigo.Helper
         }
         void LoadPreferences()
         {
-            bool shouldOpen = false;
+            var shouldOpen = false;
             var preferencesWindowType = Types.GetType("UnityEditor.PreferencesWindow", "UnityEditor.dll");
             var windows = Resources.FindObjectsOfTypeAll(preferencesWindowType);
 
@@ -86,7 +86,7 @@ namespace Kyusyukeigo.Helper
 
 
             EditorPrefs.SetBool("CacheServerEnabled", p.useCacheServer);
-            EditorPrefs.SetString("CacheServerIPAddress", p.IPAddress);
+            EditorPrefs.SetString("CacheServerIPAddress", p.cacheServerIPAddress);
 
             if (shouldOpen)
                 EditorWindow.GetWindowWithRect(preferencesWindowType, new Rect(100, 100, 500, 400), true, "Unity Preferences");
@@ -120,8 +120,9 @@ namespace Kyusyukeigo.Helper
             EditorGUILayout.LabelField("Preferences", UnityConfigHelper.Style.header, GUILayout.Height(32));
 
             var headerRect = GUILayoutUtility.GetRect(0f, EditorGUIUtility.singleLineHeight, GUILayout.ExpandWidth(true));
+           
             if (Event.current.type == EventType.Repaint)
-                new GUIStyle("RL Header").Draw(headerRect, false, false, false, false);
+                UnityConfigHelper.Style.lgHeader.Draw(headerRect, false, false, false, false);
 
 
             headerRect.xMin += 6f;
@@ -130,19 +131,28 @@ namespace Kyusyukeigo.Helper
             headerRect.y += 1f;
 
             EditorGUI.LabelField(headerRect, "General");
+            
             var rect = EditorGUILayout.BeginVertical();
+            
             rect.yMax += 3f;
+            
             if (Event.current.type == EventType.Repaint)
-                new GUIStyle("RL Background").Draw(rect, false, false, false, false);
+                UnityConfigHelper.Style.lgBackground.Draw(rect, false, false, false, false);
+            
             EditorGUI.indentLevel++;
+            
             var preferencesProp = serializedObject.FindProperty("preferences");
+            
             EditorGUIUtility.labelWidth += 100;
+            
             while (preferencesProp.NextVisible(true))
                 EditorGUILayout.PropertyField(preferencesProp);
+            
             EditorGUIUtility.labelWidth -= 100;
+            
             EditorGUI.indentLevel--;
+            
             EditorGUILayout.EndVertical();
-
         }
 
 
@@ -153,7 +163,7 @@ namespace Kyusyukeigo.Helper
             if (layoutsList == null)
             {
                 layoutsList = new ReorderableList(serializedObject, serializedObject.FindProperty("layouts"));
-                layoutsList.drawHeaderCallback += (position) => EditorGUI.LabelField(position, "Layout Assets");
+                layoutsList.drawHeaderCallback += position => EditorGUI.LabelField(position, "Layout Assets");
 
                 layoutsList.drawElementCallback += (rect, index, isActive, isFocused) =>
                 {
@@ -182,7 +192,7 @@ namespace Kyusyukeigo.Helper
 
 
             var displayNames = config.gameViewSizes.Select(v => v.type.ToString()).ToArray();
-            selectedPlatform = GUILayout.SelectionGrid((int)selectedPlatform, displayNames, displayNames.Count(), EditorStyles.toolbarButton);
+            selectedPlatform = GUILayout.SelectionGrid(selectedPlatform, displayNames, displayNames.Count(), EditorStyles.toolbarButton);
 
             EditorGUILayout.Space();
 
@@ -203,14 +213,13 @@ namespace Kyusyukeigo.Helper
                 if (!reorderableListDic.ContainsKey(key))
                 {
                     var reorderableList = new ReorderableList(serializedObject, gameViewSizeList);
-                    reorderableList.drawHeaderCallback += (position) => EditorGUI.LabelField(position, key);
-                    reorderableList.onAddCallback += (list) =>
+                    reorderableList.drawHeaderCallback += position => EditorGUI.LabelField(position, key);
+                    reorderableList.onAddCallback += list =>
                     {
                         list.serializedProperty.arraySize++;
                         var newProp = list.serializedProperty.GetArrayElementAtIndex(list.serializedProperty.arraySize - 1);
                         newProp.FindPropertyRelative("name").stringValue = "New Game Size";
                         newProp.FindPropertyRelative("sizeType").enumValueIndex = 0;
-
                     };
 
                     reorderableList.drawElementCallback += (rect, index, isActive, isFocused) =>
@@ -221,10 +230,10 @@ namespace Kyusyukeigo.Helper
                     reorderableListDic.Add(key, reorderableList);
 
                 }
+
                 var _reorderableList = reorderableListDic[key];
 
                 _reorderableList.elementHeight = _reorderableList.count == 0 ? EditorGUIUtility.singleLineHeight : (EditorGUIUtility.singleLineHeight * 4 + 8);
-
 
                 _reorderableList.DoLayoutList();
                 EditorGUILayout.Space();
