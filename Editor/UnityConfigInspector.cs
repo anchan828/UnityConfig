@@ -21,38 +21,87 @@ namespace Kyusyukeigo.Helper
         }
 
         private Dictionary<string, ReorderableList> reorderableListDic = new Dictionary<string, ReorderableList>();
-        private StringBuilder message = new StringBuilder();
 
         public override void OnInspectorGUI()
         {
             serializedObject.Update();
+
+            DrawPreferencesGUI();
+
             DrawLayoutsGUI();
 
             DrawGameViewSizeGroupGUI();
 
             if (GUILayout.Button("Load Config", "LargeButton"))
             {
-                message = new StringBuilder();
+                LoadPreferences();
                 LoadLayouts();
                 LoadGameViewSizes();
+                InternalEditorUtility.RequestScriptReload();
             }
-
-            EditorGUILayout.TextArea(message.ToString());
 
             serializedObject.ApplyModifiedProperties();
         }
+        void LoadPreferences()
+        {
+            bool shouldOpen = false;
+            var preferencesWindowType = Types.GetType("UnityEditor.PreferencesWindow", "UnityEditor.dll");
+            var windows = Resources.FindObjectsOfTypeAll(preferencesWindowType);
 
+            foreach (EditorWindow window in windows)
+            {
+                shouldOpen = true;
+                window.Close();
+            }
+
+            var p = config.preferences;
+
+            if (!string.IsNullOrEmpty(p.kScriptsDefaultApp))
+                EditorPrefs.SetString("kScriptsDefaultApp", p.kScriptsDefaultApp);
+            if (!string.IsNullOrEmpty(p.kScriptEditorArgs))
+                EditorPrefs.SetString("kScriptEditorArgs", p.kScriptEditorArgs);
+            if (!string.IsNullOrEmpty(p.kImagesDefaultApp))
+                EditorPrefs.SetString("kImagesDefaultApp", p.kImagesDefaultApp);
+            if (!string.IsNullOrEmpty(p.kDiffsDefaultApp))
+                EditorPrefs.SetString("kDiffsDefaultApp", p.kDiffsDefaultApp);
+            if (!string.IsNullOrEmpty(p.androidSdkRoot))
+                EditorPrefs.SetString("AndroidSdkRoot", p.androidSdkRoot);
+
+            EditorPrefs.SetBool("kAutoRefresh", p.kAutoRefresh);
+#if ENABLE_HOME_SCREEN
+        // EditorPrefs.SetBool("ReopenLastUsedProjectOnStartup", m_ReopenLastUsedProjectOnStartup);
+#else
+            EditorPrefs.SetBool("AlwaysShowProjectWizard", p.alwaysShowProjectWizard);
+#endif
+
+            EditorPrefs.SetBool("kCompressTexturesOnImport", p.kCompressTexturesOnImport);
+            EditorPrefs.SetBool("UseOSColorPicker", p.useOSColorPicker);
+            EditorPrefs.SetBool("EnableEditorAnalytics", p.enableEditorAnalytics);
+            EditorPrefs.SetBool("ShowAssetStoreSearchHits", p.showAssetStoreSearchHits);
+            EditorPrefs.SetBool("VerifySavingAssets", p.verifySavingAssets);
+            EditorPrefs.SetBool("AllowAttachedDebuggingOfEditor", p.allowAttachedDebuggingOfEditor);
+
+            EditorPrefs.SetBool("AllowAlphaNumericHierarchy", p.allowAlphaNumericHierarchy);
+
+
+            EditorPrefs.SetBool("CacheServerEnabled", p.useCacheServer);
+            EditorPrefs.SetString("CacheServerIPAddress", p.IPAddress);
+            
+           
+
+
+            if (shouldOpen)
+                EditorWindow.GetWindowWithRect(preferencesWindowType, new Rect(100, 100, 500, 400), true, "Unity Preferences");
+        }
         void LoadLayouts()
         {
             foreach (var layout in config.layouts)
             {
                 if (layout == null)
                     continue;
-                message.Append("[Layout] Loading " + layout.name + " ");
                 var sourceLayoutPath = AssetDatabase.GetAssetPath(layout);
                 var destLayoutPath = Path.Combine(UnityConfigHelper.layoutFolderPath, Path.GetFileName(AssetDatabase.GetAssetPath(layout)));
                 File.Copy(sourceLayoutPath, destLayoutPath, true);
-                message.AppendLine("loaded.");
 
                 
             }
@@ -65,13 +114,42 @@ namespace Kyusyukeigo.Helper
             {
                 foreach (var gameViewSize in gameViewSizeGroup.gameViewSizes)
                 {
-                    message.Append("[GameViewSize] Loading " + gameViewSize.name + " ");
                     var result = UnityConfigHelper.LoadGameViewSize(gameViewSizeGroup.type, gameViewSize);
-
-                    message.AppendLine((result ? "" : "already") + " loaded.");
-
                 }
             }
+        }
+
+
+        void DrawPreferencesGUI()
+        {
+            EditorGUILayout.LabelField("Preferences", UnityConfigHelper.Style.header, GUILayout.Height(32));     
+
+            var headerRect = GUILayoutUtility.GetRect(0f, EditorGUIUtility.singleLineHeight, GUILayout.ExpandWidth(true));
+            if (Event.current.type == EventType.Repaint)
+                new GUIStyle("RL Header").Draw(headerRect, false, false, false, false);
+
+           
+            headerRect.xMin += 6f;
+            headerRect.xMax -= 6f;
+            headerRect.height -= 2f;
+            headerRect.y += 1f;
+
+            EditorGUI.LabelField(headerRect, "General");
+            var rect = EditorGUILayout.BeginVertical();
+            rect.yMax += 3f;
+            if (Event.current.type == EventType.Repaint)
+                new GUIStyle("RL Background").Draw(rect, false, false, false, false);
+            EditorGUI.indentLevel++;
+            var preferencesProp = serializedObject.FindProperty("preferences");
+            EditorGUIUtility.labelWidth += 100;
+            while (preferencesProp.NextVisible(true))
+            {
+                EditorGUILayout.PropertyField(preferencesProp);
+            }
+            EditorGUIUtility.labelWidth -= 100;
+            EditorGUI.indentLevel--;
+            EditorGUILayout.EndVertical();
+           
         }
 
         ReorderableList layoutsList = null;
@@ -90,7 +168,8 @@ namespace Kyusyukeigo.Helper
                     var prop = layoutsList.serializedProperty.GetArrayElementAtIndex(index);
 
                     EditorGUI.BeginChangeCheck();
-
+                    rect.y += 2;
+                    rect.height = EditorGUIUtility.singleLineHeight;
                     prop.objectReferenceValue = EditorGUI.ObjectField(rect, prop.objectReferenceValue, typeof(Object));
 
                     if (EditorGUI.EndChangeCheck())

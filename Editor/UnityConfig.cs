@@ -21,13 +21,50 @@ namespace Kyusyukeigo.Helper
         public int width;
         public int height;
     }
-  
+
+    [System.Serializable]
+    public class Preferences
+    {
+        #region General
+
+        public bool kAutoRefresh;
+        public bool alwaysShowProjectWizard;
+        public bool kCompressTexturesOnImport;
+        public bool useOSColorPicker;
+        public bool enableEditorAnalytics;
+        public bool showAssetStoreSearchHits;
+        public bool verifySavingAssets;
+        public bool allowAlphaNumericHierarchy;
+
+        #endregion General
+
+        #region External Tools
+
+        public string kScriptsDefaultApp;
+        public bool allowAttachedDebuggingOfEditor;
+        public string kScriptEditorArgs;
+        public string kImagesDefaultApp;
+        public string kDiffsDefaultApp;
+        public string androidSdkRoot;
+
+        #endregion External Tools
+
+        #region Cache Server
+
+        public bool useCacheServer;
+        public string IPAddress;
+
+        #endregion
+
+    }
 
     public class UnityConfig : ScriptableObject
     {
         public GameSizeGroup[] gameViewSizes = new GameSizeGroup[0];
        
         public Object[] layouts = new Object[0];
+
+        public Preferences preferences = new Preferences();
 
         [MenuItem("Assets/Create/UnityConfig/New Config")]
         static void CreateConfig()
