@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using System.Collections;
 using UnityEditor;
 
 namespace Kyusyukeigo.Helper
@@ -34,12 +33,6 @@ namespace Kyusyukeigo.Helper
             EditorGUI.LabelField(position, "", new GUIStyle("box"));
             EditorGUI.EndProperty();
 
-        }
-
-
-        public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
-        {
-            return base.GetPropertyHeight(property, label);
         }
     }
 }

@@ -2,7 +2,6 @@
 using UnityEditor;
 using UnityEngine;
 using System.Linq;
-using System.Text;
 using System.Collections.Generic;
 using UnityEditorInternal;
 
@@ -20,7 +19,9 @@ namespace Kyusyukeigo.Helper
             }
         }
 
-        private Dictionary<string, ReorderableList> reorderableListDic = new Dictionary<string, ReorderableList>();
+        private readonly Dictionary<string, ReorderableList> reorderableListDic = new Dictionary<string, ReorderableList>();
+        ReorderableList layoutsList;
+        int selectedPlatform;
 
         public override void OnInspectorGUI()
         {
@@ -48,7 +49,7 @@ namespace Kyusyukeigo.Helper
             var preferencesWindowType = Types.GetType("UnityEditor.PreferencesWindow", "UnityEditor.dll");
             var windows = Resources.FindObjectsOfTypeAll(preferencesWindowType);
 
-            foreach (EditorWindow window in windows)
+            foreach (var window in windows.Cast<EditorWindow>())
             {
                 shouldOpen = true;
                 window.Close();
@@ -86,9 +87,6 @@ namespace Kyusyukeigo.Helper
 
             EditorPrefs.SetBool("CacheServerEnabled", p.useCacheServer);
             EditorPrefs.SetString("CacheServerIPAddress", p.IPAddress);
-            
-           
-
 
             if (shouldOpen)
                 EditorWindow.GetWindowWithRect(preferencesWindowType, new Rect(100, 100, 500, 400), true, "Unity Preferences");
@@ -102,10 +100,7 @@ namespace Kyusyukeigo.Helper
                 var sourceLayoutPath = AssetDatabase.GetAssetPath(layout);
                 var destLayoutPath = Path.Combine(UnityConfigHelper.layoutFolderPath, Path.GetFileName(AssetDatabase.GetAssetPath(layout)));
                 File.Copy(sourceLayoutPath, destLayoutPath, true);
-
-                
             }
-
             InternalEditorUtility.ReloadWindowLayoutMenu();
         }
         void LoadGameViewSizes()
@@ -114,7 +109,7 @@ namespace Kyusyukeigo.Helper
             {
                 foreach (var gameViewSize in gameViewSizeGroup.gameViewSizes)
                 {
-                    var result = UnityConfigHelper.LoadGameViewSize(gameViewSizeGroup.type, gameViewSize);
+                    UnityConfigHelper.LoadGameViewSize(gameViewSizeGroup.type, gameViewSize);
                 }
             }
         }
@@ -122,13 +117,13 @@ namespace Kyusyukeigo.Helper
 
         void DrawPreferencesGUI()
         {
-            EditorGUILayout.LabelField("Preferences", UnityConfigHelper.Style.header, GUILayout.Height(32));     
+            EditorGUILayout.LabelField("Preferences", UnityConfigHelper.Style.header, GUILayout.Height(32));
 
             var headerRect = GUILayoutUtility.GetRect(0f, EditorGUIUtility.singleLineHeight, GUILayout.ExpandWidth(true));
             if (Event.current.type == EventType.Repaint)
                 new GUIStyle("RL Header").Draw(headerRect, false, false, false, false);
 
-           
+
             headerRect.xMin += 6f;
             headerRect.xMax -= 6f;
             headerRect.height -= 2f;
@@ -143,66 +138,58 @@ namespace Kyusyukeigo.Helper
             var preferencesProp = serializedObject.FindProperty("preferences");
             EditorGUIUtility.labelWidth += 100;
             while (preferencesProp.NextVisible(true))
-            {
                 EditorGUILayout.PropertyField(preferencesProp);
-            }
             EditorGUIUtility.labelWidth -= 100;
             EditorGUI.indentLevel--;
             EditorGUILayout.EndVertical();
-           
+
         }
 
-        ReorderableList layoutsList = null;
 
         void DrawLayoutsGUI()
         {
-            EditorGUILayout.LabelField("Layouts", UnityConfigHelper.Style.header, GUILayout.Height(32));  
-            
+            EditorGUILayout.LabelField("Layouts", UnityConfigHelper.Style.header, GUILayout.Height(32));
+
             if (layoutsList == null)
             {
                 layoutsList = new ReorderableList(serializedObject, serializedObject.FindProperty("layouts"));
                 layoutsList.drawHeaderCallback += (position) => EditorGUI.LabelField(position, "Layout Assets");
-                
-                layoutsList.drawElementCallback += ( rect, index, isActive, isFocused) =>
+
+                layoutsList.drawElementCallback += (rect, index, isActive, isFocused) =>
                 {
                     var prop = layoutsList.serializedProperty.GetArrayElementAtIndex(index);
 
                     EditorGUI.BeginChangeCheck();
                     rect.y += 2;
                     rect.height = EditorGUIUtility.singleLineHeight;
-                    prop.objectReferenceValue = EditorGUI.ObjectField(rect, prop.objectReferenceValue, typeof(Object));
+                    prop.objectReferenceValue = EditorGUI.ObjectField(rect, prop.objectReferenceValue, typeof(Object), false);
 
-                    if (EditorGUI.EndChangeCheck())
-                    {
-                        if (Path.GetExtension(AssetDatabase.GetAssetPath(prop.objectReferenceValue)) != ".wlt")
-                            prop.objectReferenceValue = null;
-                    }
+                    if (!EditorGUI.EndChangeCheck()) return;
 
-                    // EditorGUI.PropertyField(rect, layoutsList.serializedProperty.GetArrayElementAtIndex(index));
+                    if (Path.GetExtension(AssetDatabase.GetAssetPath(prop.objectReferenceValue)) != ".wlt")
+                        prop.objectReferenceValue = null;
                 };
 
             }
             layoutsList.DoLayoutList();
-
-
         }
 
-        int selectedPlatform = 0;
-       
+
+
         void DrawGameViewSizeGroupGUI()
         {
             EditorGUILayout.LabelField("GameView Size", UnityConfigHelper.Style.header, GUILayout.Height(32));
-           
+
 
             var displayNames = config.gameViewSizes.Select(v => v.type.ToString()).ToArray();
             selectedPlatform = GUILayout.SelectionGrid((int)selectedPlatform, displayNames, displayNames.Count(), EditorStyles.toolbarButton);
 
             EditorGUILayout.Space();
 
-           
+
             var gameViewSizes = serializedObject.FindProperty("gameViewSizes");
 
-            for (int i = 0; i < gameViewSizes.arraySize; i++)
+            for (var i = 0; i < gameViewSizes.arraySize; i++)
             {
 
                 var gameViewSizeGroup = gameViewSizes.GetArrayElementAtIndex(i);
@@ -226,50 +213,21 @@ namespace Kyusyukeigo.Helper
 
                     };
 
-                    reorderableList.drawElementCallback += ( rect, index, isActive, isFocused) =>
+                    reorderableList.drawElementCallback += (rect, index, isActive, isFocused) =>
                     {
                         EditorGUI.PropertyField(rect, reorderableList.serializedProperty.GetArrayElementAtIndex(index));
                     };
-                    
+
                     reorderableListDic.Add(key, reorderableList);
 
                 }
                 var _reorderableList = reorderableListDic[key];
 
                 _reorderableList.elementHeight = _reorderableList.count == 0 ? EditorGUIUtility.singleLineHeight : (EditorGUIUtility.singleLineHeight * 4 + 8);
-                
+
 
                 _reorderableList.DoLayoutList();
                 EditorGUILayout.Space();
-            }
-
-
-           
-        }
-
-        void DrawGameViewSizeGUI(int index, params GameViewSize[] gameViewSizes)
-        {
-            foreach (var gameViewSize in gameViewSizes)
-            {
-                var rect = EditorGUILayout.BeginVertical("box");
-                gameViewSize.name = EditorGUILayout.TextField("Label", gameViewSize.name);
-                gameViewSize.sizeType = (GameViewSizeHelper.GameViewSizeType)EditorGUILayout.EnumPopup("Type", gameViewSize.sizeType);
-                EditorGUILayout.BeginHorizontal();
-                EditorGUILayout.LabelField("Width & Height", GUILayout.Width(128));
-                gameViewSize.width = EditorGUILayout.IntField(gameViewSize.width);
-                gameViewSize.height = EditorGUILayout.IntField(gameViewSize.height);
-                EditorGUILayout.EndHorizontal();
-                EditorGUILayout.EndVertical();
-
-
-                if (Event.current.type == EventType.ContextClick && rect.Contains(Event.current.mousePosition))
-                {
-                    var menu = new GenericMenu();
-                    menu.AddItem(new GUIContent("Delete"), false, (o) =>
-                            ArrayUtility.Remove<GameViewSize>(ref config.gameViewSizes[index].gameViewSizes, (GameViewSize)o)
-                        , gameViewSize);
-                    menu.ShowAsContext();
-                }
             }
         }
     }

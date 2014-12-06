@@ -9,15 +9,10 @@ namespace Kyusyukeigo.Helper
     [InitializeOnLoad]
     internal class UnityConfigHelper
     {
-
-        static UnityConfigHelper()
-        {
-        }
-
         internal static GameViewSizeGroupType[] gameViewSizeTypes
         {
             get
-            { 
+            {
                 return Enum.GetValues(typeof(GameViewSizeGroupType)).Cast<GameViewSizeGroupType>().ToArray();
             }
         }
@@ -31,7 +26,7 @@ namespace Kyusyukeigo.Helper
         {
             get
             {
-                return FileUtil.GetProjectRelativePath(currentFolderPath) + "/conf";
+                return Path.Combine(currentFolderPath, "conf");
             }
         }
 
@@ -39,9 +34,9 @@ namespace Kyusyukeigo.Helper
         {
             get
             {
-                var currentFilePath = new System.Diagnostics.StackTrace(true).GetFrame(0).GetFileName();
-
-                return Path.GetDirectoryName(currentFilePath);
+                var csPath = AssetDatabase.GetAllAssetPaths()
+                        .FirstOrDefault(path => Path.GetFileName(path) == typeof(UnityConfigHelper).Name + ".cs");
+                return Path.GetDirectoryName(csPath);
             }
         }
 
@@ -67,7 +62,7 @@ namespace Kyusyukeigo.Helper
         internal class Style
         {
             public static GUIStyle header = new GUIStyle(EditorStyles.largeLabel);
- 
+
             static Style()
             {
                 header.fontStyle = FontStyle.Bold;

@@ -1,5 +1,5 @@
-﻿using UnityEngine;
-using System.Collections.Generic;
+﻿using System.IO;
+using UnityEngine;
 using UnityEditor;
 
 namespace Kyusyukeigo.Helper
@@ -9,7 +9,7 @@ namespace Kyusyukeigo.Helper
     {
         [HideInInspector]
         public GameViewSizeGroupType type;
-        
+
         public GameViewSize[] gameViewSizes = new GameViewSize[0];
     }
 
@@ -27,12 +27,12 @@ namespace Kyusyukeigo.Helper
     {
         #region General
 
-        public bool kAutoRefresh;
+        public bool kAutoRefresh = true;
         public bool alwaysShowProjectWizard;
-        public bool kCompressTexturesOnImport;
+        public bool kCompressTexturesOnImport = true;
         public bool useOSColorPicker;
-        public bool enableEditorAnalytics;
-        public bool showAssetStoreSearchHits;
+        public bool enableEditorAnalytics = true;
+        public bool showAssetStoreSearchHits = true;
         public bool verifySavingAssets;
         public bool allowAlphaNumericHierarchy;
 
@@ -41,7 +41,7 @@ namespace Kyusyukeigo.Helper
         #region External Tools
 
         public string kScriptsDefaultApp;
-        public bool allowAttachedDebuggingOfEditor;
+        public bool allowAttachedDebuggingOfEditor = true;
         public string kScriptEditorArgs;
         public string kImagesDefaultApp;
         public string kDiffsDefaultApp;
@@ -61,7 +61,7 @@ namespace Kyusyukeigo.Helper
     public class UnityConfig : ScriptableObject
     {
         public GameSizeGroup[] gameViewSizes = new GameSizeGroup[0];
-       
+
         public Object[] layouts = new Object[0];
 
         public Preferences preferences = new Preferences();
@@ -72,17 +72,18 @@ namespace Kyusyukeigo.Helper
             var config = CreateInstance<UnityConfig>();
 
             config.Reset();
-
-            ProjectWindowUtil.CreateAsset(config, UnityConfigHelper.configFolderPath + "/New UnityConfig.asset");
+            Directory.CreateDirectory(UnityConfigHelper.configFolderPath);
+            Debug.Log(UnityConfigHelper.configFolderPath);
+            ProjectWindowUtil.CreateAsset(config, Path.Combine(UnityConfigHelper.configFolderPath, "New UnityConfig.asset"));
         }
 
         void Reset()
         {
             gameViewSizes = new GameSizeGroup[0];
 
-            foreach (var gameViewSizeType in new []{GameViewSizeGroupType.WebPlayer,GameViewSizeGroupType.Standalone,GameViewSizeGroupType.Android,GameViewSizeGroupType.iOS})
+            foreach (var gameViewSizeType in new[] { GameViewSizeGroupType.WebPlayer, GameViewSizeGroupType.Standalone, GameViewSizeGroupType.Android, GameViewSizeGroupType.iOS })
             {
-                ArrayUtility.Add<GameSizeGroup>(ref gameViewSizes, new GameSizeGroup
+                ArrayUtility.Add(ref gameViewSizes, new GameSizeGroup
                     {
                         type = gameViewSizeType
                     });
