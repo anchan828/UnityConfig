@@ -1,0 +1,41 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a2153936af3b0414c94d8d63ddc0663f, type: 3}
+  m_Name: New UnityConfig
+  m_EditorClassIdentifier: 
+  gameViewSizes:
+  - type: 1
+    gameViewSizes: []
+  - type: 0
+    gameViewSizes: []
+  - type: 3
+    gameViewSizes: []
+  - type: 2
+    gameViewSizes: []
+  layouts:
+  - {fileID: 102900000, guid: 2e36fcd594194454a816c8e96bbbd4d2, type: 3}
+  preferences:
+    kAutoRefresh: 1
+    alwaysShowProjectWizard: 0
+    kCompressTexturesOnImport: 1
+    useOSColorPicker: 0
+    enableEditorAnalytics: 1
+    showAssetStoreSearchHits: 1
+    verifySavingAssets: 0
+    allowAlphaNumericHierarchy: 0
+    kScriptsDefaultApp: 
+    allowAttachedDebuggingOfEditor: 1
+    kScriptEditorArgs: 
+    kImagesDefaultApp: 
+    kDiffsDefaultApp: 
+    androidSdkRoot: 
+    useCacheServer: 1
+    IPAddress: 1.1.1.1

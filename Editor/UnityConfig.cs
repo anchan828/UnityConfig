@@ -58,6 +58,16 @@ namespace Kyusyukeigo.Helper
 
     }
 
+    [System.Serializable]
+    public class Snap
+    {
+        public float moveSnapX;
+        public float moveSnapY;
+        public float moveSnapZ;
+        public float scaleSnap;
+        public float rotationSnap;
+    }
+
     public class UnityConfig : ScriptableObject
     {
         public GameSizeGroup[] gameViewSizes = {
@@ -96,6 +106,14 @@ namespace Kyusyukeigo.Helper
 
             useCacheServer = false,
             cacheServerIPAddress = ""
+        };
+
+        public Snap snap = new Snap{
+            moveSnapX = 1,
+            moveSnapY = 1,
+            moveSnapZ = 1,
+            scaleSnap = 1,
+            rotationSnap = 15
         };
 
         [MenuItem("Assets/Create/UnityConfig/New Config")]

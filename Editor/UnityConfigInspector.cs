@@ -29,12 +29,15 @@ namespace Kyusyukeigo.Helper
 
             DrawPreferencesGUI();
 
+            DrawSnapGUI();
+
             DrawLayoutsGUI();
 
             DrawGameViewSizeGroupGUI();
 
             if (GUILayout.Button("Load Config", "LargeButton"))
             {
+                LoadSnap();
                 LoadPreferences();
                 LoadLayouts();
                 LoadGameViewSizes();
@@ -43,6 +46,32 @@ namespace Kyusyukeigo.Helper
 
             serializedObject.ApplyModifiedProperties();
         }
+
+        void LoadSnap()
+        {
+            var shouldOpen = false;
+            var snapSettingsType = Types.GetType("UnityEditor.SnapSettings", "UnityEditor.dll");
+            var windows = Resources.FindObjectsOfTypeAll(snapSettingsType);
+
+            foreach (var window in windows.Cast<EditorWindow>())
+            {
+                shouldOpen = true;
+                window.Close();
+            }
+
+
+            var s = config.snap;
+
+            EditorPrefs.SetFloat("MoveSnapX", s.moveSnapX);
+            EditorPrefs.SetFloat("MoveSnapY", s.moveSnapY);
+            EditorPrefs.SetFloat("MoveSnapZ", s.moveSnapZ);
+            EditorPrefs.SetFloat("ScaleSnap", s.scaleSnap);
+            EditorPrefs.SetFloat("RotationSnap", s.rotationSnap);
+
+            if (shouldOpen)
+                EditorWindow.GetWindowWithRect(snapSettingsType, new Rect(100, 100, 230, 130), true, "Snap settings");
+        }
+
         void LoadPreferences()
         {
             var shouldOpen = false;
@@ -91,6 +120,7 @@ namespace Kyusyukeigo.Helper
             if (shouldOpen)
                 EditorWindow.GetWindowWithRect(preferencesWindowType, new Rect(100, 100, 500, 400), true, "Unity Preferences");
         }
+
         void LoadLayouts()
         {
             foreach (var layout in config.layouts)
@@ -114,10 +144,16 @@ namespace Kyusyukeigo.Helper
             }
         }
 
-
-        void DrawPreferencesGUI()
+        void DrawSnapGUI()
         {
-            EditorGUILayout.LabelField("Preferences", UnityConfigHelper.Style.header, GUILayout.Height(32));
+
+            GeneralDrawGUI("Snap", "Snap Settings", "snap");
+
+        }
+
+        void GeneralDrawGUI(string header, string label, string  propName)
+        {
+            EditorGUILayout.LabelField(header, UnityConfigHelper.Style.header, GUILayout.Height(32));
 
             var headerRect = GUILayoutUtility.GetRect(0f, EditorGUIUtility.singleLineHeight, GUILayout.ExpandWidth(true));
            
@@ -130,7 +166,7 @@ namespace Kyusyukeigo.Helper
             headerRect.height -= 2f;
             headerRect.y += 1f;
 
-            EditorGUI.LabelField(headerRect, "General");
+            EditorGUI.LabelField(headerRect, label);
             
             var rect = EditorGUILayout.BeginVertical();
             
@@ -141,18 +177,25 @@ namespace Kyusyukeigo.Helper
             
             EditorGUI.indentLevel++;
             
-            var preferencesProp = serializedObject.FindProperty("preferences");
-            
+            var preferencesProp = serializedObject.FindProperty(propName);
             EditorGUIUtility.labelWidth += 100;
             
             while (preferencesProp.NextVisible(true))
-                EditorGUILayout.PropertyField(preferencesProp);
+            {
+                if (preferencesProp.propertyPath.StartsWith(propName + "."))
+                    EditorGUILayout.PropertyField(preferencesProp);
+            }
             
             EditorGUIUtility.labelWidth -= 100;
             
             EditorGUI.indentLevel--;
             
             EditorGUILayout.EndVertical();
+        }
+
+        void DrawPreferencesGUI()
+        {
+            GeneralDrawGUI("Preferences", "Unity Preferences", "preferences");
         }
 
 
@@ -174,7 +217,8 @@ namespace Kyusyukeigo.Helper
                     rect.height = EditorGUIUtility.singleLineHeight;
                     prop.objectReferenceValue = EditorGUI.ObjectField(rect, prop.objectReferenceValue, typeof(Object), false);
 
-                    if (!EditorGUI.EndChangeCheck()) return;
+                    if (!EditorGUI.EndChangeCheck())
+                        return;
 
                     if (Path.GetExtension(AssetDatabase.GetAssetPath(prop.objectReferenceValue)) != ".wlt")
                         prop.objectReferenceValue = null;
